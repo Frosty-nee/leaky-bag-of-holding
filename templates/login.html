@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block css %}
+	<link rel='stylesheet' href='/css/home.css'>
+{% endblock %}
+{% block main %}
+<div class='login'>
+	<form action='' method='POST'>
+		<label>Email
+			<input type='text' name='email'>
+		</label>
+		<label>password
+			<input type='password' name='password'>
+		</label>
+		<input type='submit' value='login'>
+	</form>
+{% endblock %}

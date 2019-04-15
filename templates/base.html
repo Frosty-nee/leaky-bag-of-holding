@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+	<title>Leaky Bag of Holding</title>
+	<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}" />
+	<link rel='shortcut icon' href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+	<body>
+		<div class='wrapper'>
+			<div class='topbar'>
+				<div class='title'>
+					<a href='/'>Home</a>
+				</div>
+				<div class='nav'>
+					{% if session['username'] %}
+						<a href='/account'>account</a>
+						<a href='/logout'>logout</a>
+					{% else %}
+						<a href='/login'>login</a>
+						<a href='/register'>register</a>
+					{% endif %}
+				</div>
+			</div>
+		{% block main %} {% endblock %}
+	</body>
+</html>
+
