@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block css %}
+	<link rel='stylesheet' href='/css/account.css'>
+{% endblock %}
+
+{% block main %}
+	{% if session['username'] %}
+		username: {{ session['username'] }}
+		<div class=password_update>
+			<form action='' method='POST'>
+				update password <br>
+				<label>Current Password:</label>
+					<input class=pass type='password' name='current_password'>
+				<br>
+				<label>New Password:</label>
+					<input class=pass type='password' name='new_password'>
+				<br>
+				<label>Confirm New Password:</label>
+					<input class=pass type='password' name='confirm_new_password'>
+				<br>
+				<input type='submit' name='update_password' class='submit'>
+			</form>
+		</div>
+		Current upload key: {{ upload_key }}
+		<form action='' method='POST'>
+			<label>Generate new upload key</label>
+				<input type='submit' name='regenerate_upload_key' class='submit'>
+		</form>
+	{% else %}
+		you are not logged in
+	{% endif %}
+{% endblock %}

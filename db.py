@@ -30,10 +30,10 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String)
+    username = Column(String, unique=True)
     salt = Column(String)
     password = Column(String)
-    upload_key = Column(String)
+    upload_key = Column(String, unique=True)
 
     def __repr__(self):
        return "<User(username='%s', password='%s', salt='%s')>" % (self.username, self.password, self.salt)
@@ -57,14 +57,17 @@ class User(Base):
         if hashed == user.password:
             return user
     
-    
+    @staticmethod
+    def gen_upload_key():
+        return binascii.hexlify(os.urandom(24)).decode()
+        
 
 class File(Base):
     __tablename__ = 'files'
 
     id = Column(Integer, primary_key=True)
     who_uploaded = Column(Integer, ForeignKey("users.id"), nullable=False)
-    filename = Column(String)
+    filename = Column(String, unique=True)
     expires = Column(DateTime)
 
     def __repr__(self):
@@ -76,6 +79,18 @@ def init_db():
 def drop_db():
     pass
 
+
+def create_user(username, password):
+    hashed_pass, salt = User.hash_pw(password)
+    upload_key = User.gen_upload_key()
+    user = User(username=username, password=hashed_pass, salt=salt, upload_key=upload_key)
+    session.add(user)
+
+    try:
+        session.commit()
+    except sqlalchemy.exc.DBAPIError as e:
+        print('Error:', e)
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
@@ -83,4 +98,5 @@ if __name__ == '__main__':
             init_db()
         if sys.argv[1] == 'drop':
             drop_db()
-        
+        if sys.argv[1] == 'create':
+            create_user(sys.argv[2], sys.argv[3])
