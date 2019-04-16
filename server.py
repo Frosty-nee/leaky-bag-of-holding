@@ -16,8 +16,9 @@ app.secret_key = "key"
 def root():
     if request.method == 'POST':
         for f in request.files:
-            file_extension = request.files[f].filename.split('.')[-1]
-            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + '.' + file_extension
+            file_extension = os.path.splitext(request.files[f].filename)[1]
+            print(file_extension)
+            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
             request.files[f].save(os.path.join('uploads/', random_filename))
         return 'https://file.frosty-nee.net/' + random_filename
     else:
