@@ -5,6 +5,7 @@ import os
 import binascii
 import string
 import random
+from datetime import datetime, timedelta
 
 import flask
 from flask import request, session
@@ -17,12 +18,12 @@ app.secret_key = "key"
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        for f in request.files:
-            file_extension = os.path.splitext(request.files[f].filename)[1]
-            print(file_extension)
-            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
-            request.files[f].save(os.path.join('uploads/', random_filename))
-        return 'https://file.frosty-nee.net/' + random_filename
+        if 'username' not in session:
+            user = None
+        else:
+            user = db.session.query(db.User).filter(db.User.username == session['username']).first()
+        return flask.redirect(upload_file(user, request.files))
+            
     else:
         return flask.render_template('home.html')
 
@@ -36,7 +37,34 @@ def login():
             session['username'] = user.username
             session['user_id'] = user.id
             return flask.redirect(flask.url_for('home'))
-        return
+        flask.flash('login unsuccessful')
+        return flask.redirect(flask.url_for('login'))
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    user = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
+    return upload_file(user, request.files)
+
+def upload_file(user, files, expires=24):
+    expires = datetime.utcnow() + timedelta(hours=expires)
+    print(expires)
+    if user == None:
+        return flask.abort(403)
+    else:
+        for f in files:
+            file_extension = os.path.splitext(files[f].filename)[1]
+            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
+            files[f].save(os.path.join('uploads/', random_filename))
+            #this doesn't actually commit to db yet
+            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires))
+            return 'https://file.frosty-nee.net/' + random_filename
+
+@app.route('/delete')
+def delete():
+    if request.args.get('upload_key') == None:
+        return flask.abort(403)
+    return
+
 
 @app.route('/logout')
 def logout():

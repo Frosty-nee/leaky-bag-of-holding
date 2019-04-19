@@ -3,4 +3,10 @@
 {% block css %}
 	<link rel='stylesheet' href='/css/home.css'>
 {% endblock %}
-
+{% block main %}
+	<form method='POST' enctype='multipart/form-data'>
+		<input type='text' name='expire_in'>
+		<input type='file' name='files'>
+		<input type='submit' value='upload'>
+	</form>
+{% endblock %}
