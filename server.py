@@ -1,19 +1,21 @@
 #! python3
 
 import os
-
 import binascii
 import string
 import random
 from datetime import datetime, timedelta
+import threading
+import time
 
 import flask
 from flask import request, session
 
 import db
+import config
 
 app = flask.Flask(__name__)
-app.secret_key = "key"
+app.secret_key = config.secret_key
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -116,5 +118,21 @@ def account():
             return flask.redirect(flask.url_for('account'))
     return flask.render_template('account.html')
 
+def delete_expired():
+    while True:
+        files = db.session.query(db.File).filter(db.File.expires <= datetime.utcnow())
+        for f in files:
+            try:
+                os.remove(os.path.join('uploads/', f.filename))
+                db.session.delete(f)
+            except OSError as e:
+                pass
+        db.session.commit()
+        time.sleep(60)
+
+
 if __name__ == '__main__':
-    app.run()
+    delete_thread = threading.Thread(target=delete_expired)
+    delete_thread.start()
+    app.run(port=config.port, debug=config.debug)
+

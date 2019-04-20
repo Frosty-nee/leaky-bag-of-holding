@@ -50,17 +50,16 @@ class User(Base):
     @staticmethod
     def login(username, password):
         user = session.query(User).filter(User.username == username).first()
-        
         if not user:
             return False
         hashed, _ = User.hash_pw(password, binascii.unhexlify(user.salt))
         if hashed == user.password:
             return user
-    
+
     @staticmethod
     def gen_upload_key():
         return binascii.hexlify(os.urandom(24)).decode()
-        
+
 
 class File(Base):
     __tablename__ = 'files'
@@ -90,6 +89,12 @@ def create_user(username, password):
         session.commit()
     except sqlalchemy.exc.DBAPIError as e:
         print('Error:', e)
+
+def delete_user(username):
+    user = session.query(User).filter(User.username == username).first()
+    session.delete(user)
+    session.commit()
+
 
 if __name__ == '__main__':
     import sys
