@@ -41,12 +41,22 @@ def login():
         flask.flash('login unsuccessful')
         return flask.redirect(flask.url_for('login'))
 
+
+'''
+route for sharex use, takes url parameters 'upload_key' and 'expires'
+upload key is copy/pasted from account page
+expires is a string in the format 1d2h3m
+'''
 @app.route('/upload', methods=['POST'])
 def upload():
     user = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
     expires = request.args.get('expires')
     return upload_file(user, request.files, expires)
 
+'''
+takes a duration string and converts it to timedelta
+string format is 1d2h3m
+'''
 def parse_time(expiry_string):
     td_args = {'days': 0, 'hours': 0, 'minutes': 0}
     for char, unit in zip('dhm', ['days', 'hours', 'minutes']):
@@ -64,7 +74,6 @@ def parse_time(expiry_string):
         return flask.abort(400)
     return td
 
-
 def upload_file(user, files, expires=None):
     if expires == None:
         expires = '7d'
@@ -74,11 +83,20 @@ def upload_file(user, files, expires=None):
     else:
         for f in files:
             file_extension = os.path.splitext(files[f].filename)[1]
-            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
+            while True:
+                random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
+                if check_filename_free(random_filename):
+                    break
             files[f].save(os.path.join('uploads/', random_filename))
             db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires))
             db.session.commit()
             return 'https://file.frosty-nee.net/' + random_filename
+
+def check_filename_free(filename):
+    if db.session.query(db.File).filter(db.File.filename == filename).first() == None:
+        return True
+    else:
+        return False
 
 @app.route('/delete/<filename>')
 def delete(filename):
