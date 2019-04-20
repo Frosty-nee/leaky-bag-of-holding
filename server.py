@@ -47,6 +47,8 @@ def upload():
     return upload_file(user, request.files, expires)
 
 def upload_file(user, files, expires=24):
+    if expires == None:
+        expires = 24
     expires = datetime.utcnow() + timedelta(hours=expires)
     print(expires)
     if user == None:
@@ -65,14 +67,19 @@ def delete(filename):
     if request.args.get('upload_key') == None and 'username' not in session:
         return flask.abort(401)
     else:
-        try:
-            f = db.session.query(db.File).filter(db.File.filename == filename).first()
-            os.remove(os.path.join('uploads/', f.filename))
-            db.session.delete(f)
-        except OSError as e:
-            return flask.abort(500)
-        db.session.commit()
-    return
+        f = db.session.query(db.File).filter(db.File.filename == filename).first()
+        if 'user_id' in session:
+            user_id = session['user_id']
+        else:
+            user_id = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
+        if f.who_uploaded == user_id:
+            try:
+                os.remove(os.path.join('uploads/', f.filename))
+                db.session.delete(f)
+            except OSError as e:
+                return flask.abort(500)
+            db.session.commit()
+    return flask.redirect(flask.url_for('account'))
 
 
 @app.route('/logout')
