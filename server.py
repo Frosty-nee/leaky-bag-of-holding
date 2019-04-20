@@ -10,6 +10,7 @@ import time
 
 import flask
 from flask import request, session
+from werkzeug.utils import secure_filename
 
 import db
 import config
@@ -82,7 +83,7 @@ def upload_file(user, files, expires=None):
         return flask.abort(401)
     else:
         for f in files:
-            file_extension = os.path.splitext(files[f].filename)[1]
+            file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
             while True:
                 random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
                 if check_filename_free(random_filename):
