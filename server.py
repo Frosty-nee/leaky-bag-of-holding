@@ -43,26 +43,35 @@ def login():
 @app.route('/upload', methods=['POST'])
 def upload():
     user = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
-    return upload_file(user, request.files)
+    expires = request.args.get('expires')
+    return upload_file(user, request.files, expires)
 
 def upload_file(user, files, expires=24):
     expires = datetime.utcnow() + timedelta(hours=expires)
     print(expires)
     if user == None:
-        return flask.abort(403)
+        return flask.abort(401)
     else:
         for f in files:
             file_extension = os.path.splitext(files[f].filename)[1]
             random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
             files[f].save(os.path.join('uploads/', random_filename))
-            #this doesn't actually commit to db yet
             db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires))
+            db.session.commit()
             return 'https://file.frosty-nee.net/' + random_filename
 
-@app.route('/delete')
-def delete():
-    if request.args.get('upload_key') == None:
-        return flask.abort(403)
+@app.route('/delete/<filename>')
+def delete(filename):
+    if request.args.get('upload_key') == None and 'username' not in session:
+        return flask.abort(401)
+    else:
+        try:
+            f = db.session.query(db.File).filter(db.File.filename == filename).first()
+            os.remove(os.path.join('uploads/', f.filename))
+            db.session.delete(f)
+        except OSError as e:
+            return flask.abort(500)
+        db.session.commit()
     return
 
 
@@ -79,7 +88,9 @@ def account():
         return flask.redirect('/login')
     if request.method == 'GET':
         user = db.session.query(db.User).filter(db.User.username == session['username']).first()
-        return flask.render_template('account.html', upload_key=user.upload_key)
+        files = db.session.query(db.File).filter(db.File.who_uploaded == user.id)
+        return flask.render_template('account.html', upload_key=user.upload_key, files=files)
+
     if request.method == 'POST':
         user = db.session.query(db.User).filter(db.User.username == session['username']).first()
         if 'regenerate_upload_key' in request.form:

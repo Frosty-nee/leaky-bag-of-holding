@@ -3,7 +3,9 @@
 <head>
 	<title>Leaky Bag of Holding</title>
 	<link rel='stylesheet' type='text/css' href='/static/css/style.css'/>
-	<link rel='shortcut icon' href="{{ url_for('static', filename='favicon.ico') }}">
+	{% block css %}
+	{% endblock css %}
+	<link rel='shortcut icon' href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 	<body>
 		<div class='wrapper'>

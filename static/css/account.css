@@ -1,0 +1,17 @@
+.file_entry_wrapper {
+    width: 600px;
+}
+
+.filename {
+    float: left;
+    width: 180px;
+}
+
+.expiry {
+    float: left;
+}
+
+.delete {
+    float: left;
+    padding-left: 30px;
+}

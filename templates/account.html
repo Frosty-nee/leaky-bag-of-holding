@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block css %}
-	<link rel='stylesheet' href='/css/account.css'>
+	<link rel='stylesheet' href='/static/css/account.css'>
 {% endblock %}
 
 {% block main %}
@@ -27,6 +27,22 @@
 			<label>Generate new upload key</label>
 				<input type='submit' name='regenerate_upload_key' class='submit'>
 		</form>
+		<br>
+		<div class="files">
+			{% for file in files %}
+			<div class="file_entry_wrapper">
+				<div class="filename">
+					<a href="https://file.frosty-nee.net/{{file.filename}}">{{file.filename}}</a>
+				</div>
+				<div class="expiry">
+					Expires at: {{file.expires}}
+				</div>
+				<div class="delete">
+					<a href="/delete/{{file.filename}}">Delete</a>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
 	{% else %}
 		you are not logged in
 	{% endif %}
