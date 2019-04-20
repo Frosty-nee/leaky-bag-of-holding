@@ -23,7 +23,6 @@ def home():
         else:
             user = db.session.query(db.User).filter(db.User.username == session['username']).first()
         return flask.redirect(upload_file(user, request.files))
-            
     else:
         return flask.render_template('home.html')
 

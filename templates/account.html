@@ -10,24 +10,28 @@
 		<div class=password_update>
 			<form action='' method='POST'>
 				update password <br>
-				<label>Current Password:</label>
-					<input class=pass type='password' name='current_password'>
-				<br>
-				<label>New Password:</label>
-					<input class=pass type='password' name='new_password'>
-				<br>
-				<label>Confirm New Password:</label>
-					<input class=pass type='password' name='confirm_new_password'>
-				<br>
+				<div class=input_wrapper>
+					<label>Current Password:</label>
+						<input class=pass type='password' name='current_password'>
+				</div>
+				<div class=input_wrapper>
+					<label>New Password:</label>
+						<input class=pass type='password' name='new_password'>
+				</div>
+				<div class=input_wrapper>
+					<label>Confirm New Password:</label>
+						<input class=pass type='password' name='confirm_new_password'>
+				</div>
 				<input type='submit' name='update_password' class='submit'>
 			</form>
 		</div>
-		Current upload key: {{ upload_key }}
-		<form action='' method='POST'>
-			<label>Generate new upload key</label>
-				<input type='submit' name='regenerate_upload_key' class='submit'>
-		</form>
-		<br>
+		<div class=upload_key_wrapper>
+			Current upload key: {{ upload_key }}
+			<form action='' method='POST'>
+				<label>Generate new upload key</label>
+					<input type='submit' name='regenerate_upload_key' class='submit'>
+			</form>
+		</div>
 		<div class="files">
 			{% for file in files %}
 			<div class="file_entry_wrapper">
