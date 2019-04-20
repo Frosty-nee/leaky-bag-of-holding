@@ -24,7 +24,7 @@ def home():
             user = None
         else:
             user = db.session.query(db.User).filter(db.User.username == session['username']).first()
-        return flask.redirect(upload_file(user, request.files))
+        return flask.redirect(upload_file(user, request.files, request.form.get('expire_in')))
     else:
         return flask.render_template('home.html')
 
@@ -47,11 +47,28 @@ def upload():
     expires = request.args.get('expires')
     return upload_file(user, request.files, expires)
 
-def upload_file(user, files, expires=24):
+def parse_time(expiry_string):
+    td_args = {'days': 0, 'hours': 0, 'minutes': 0}
+    for char, unit in zip('dhm', ['days', 'hours', 'minutes']):
+        try:
+            n_units, arg = expiry_string.split(char,1)
+        except ValueError:
+            continue
+        try:
+            td_args[unit] = int(n_units)
+        except ValueError as e:
+            continue
+    try:
+        td = timedelta(**td_args)
+    except OverflowError:
+        return flask.abort(400)
+    return td
+
+
+def upload_file(user, files, expires=None):
     if expires == None:
-        expires = 24
-    expires = datetime.utcnow() + timedelta(hours=expires)
-    print(expires)
+        expires = '7d'
+    expires = parse_time(expires) + datetime.utcnow()
     if user == None:
         return flask.abort(401)
     else:
