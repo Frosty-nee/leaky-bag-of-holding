@@ -17,6 +17,7 @@ import config
 
 app = flask.Flask(__name__)
 app.secret_key = config.secret_key
+app.config['MAX_CONTENT_LENGTH'] = config.max_content_length
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -24,7 +25,7 @@ def home():
         if 'username' not in session:
             user = None
         else:
-            user = db.session.query(db.User).filter(db.User.username == session['username']).first()
+            user = get_user(username=session['username'])
         return flask.redirect(upload_file(user, request.files, request.form.get('expire_in')))
     else:
         return flask.render_template('home.html')
@@ -50,7 +51,7 @@ expires is a string in the format 1d2h3m
 '''
 @app.route('/upload', methods=['POST'])
 def upload():
-    user = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
+    user = get_user(upload_key=request.args.get('upload_key'))
     expires = request.args.get('expires')
     return upload_file(user, request.files, expires)
 
@@ -94,30 +95,60 @@ def upload_file(user, files, expires=None):
             return 'https://file.frosty-nee.net/' + random_filename
 
 def check_filename_free(filename):
-    if db.session.query(db.File).filter(db.File.filename == filename).first() == None:
+    if not get_file(filename):
         return True
     else:
         return False
 
 @app.route('/delete/<filename>')
 def delete(filename):
-    if request.args.get('upload_key') == None and 'username' not in session:
+    if not request.args.get('upload_key') and 'username' not in session:
         return flask.abort(401)
     else:
-        f = db.session.query(db.File).filter(db.File.filename == filename).first()
         if 'user_id' in session:
             user_id = session['user_id']
+        elif request.args.get('upload_key'):
+            user_id = get_user(upload_key=request.args.get('upload_key')).id
         else:
-            user_id = db.session.query(db.User).filter(db.User.upload_key == request.args.get('upload_key')).first()
+            return flask.abort(401)
+        f = get_file(filename)
+        if not f:
+            return flask.abort(500)
         if f.who_uploaded == user_id:
             try:
-                os.remove(os.path.join('uploads/', f.filename))
-                db.session.delete(f)
-            except OSError as e:
+                delete_file(f)
+            except OSError:
                 return flask.abort(500)
-            db.session.commit()
     return flask.redirect(flask.url_for('account'))
 
+def delete_file(f):
+    try:
+        db.session.delete(f)
+        db.session.commit()
+        os.remove(os.path.join('uploads/', f.filename))
+    except OSError:
+        raise
+
+
+def get_file(filename):
+    return db.session.query(db.File).filter(db.File.filename == filename).one_or_none()
+
+def get_user(username=None, user_id=None, upload_key=None):
+    if username:
+        try:
+            return db.session.query(db.User).filter(db.User.username == username).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+    elif user_id:
+        try:
+            return db.session.query(db.User).filter(db.User.id == user_id).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
+    else:
+        try:
+            return db.session.query(db.User).filter(db.User.upload_key == upload_key).one()
+        except sqlalchemy.orm.exc.NoResultFound:
+            return None
 
 @app.route('/logout')
 def logout():
@@ -131,12 +162,12 @@ def account():
         flask.flash('you are not logged in')
         return flask.redirect('/login')
     if request.method == 'GET':
-        user = db.session.query(db.User).filter(db.User.username == session['username']).first()
+        user = get_user(username=session['username'])
         files = db.session.query(db.File).filter(db.File.who_uploaded == user.id)
         return flask.render_template('account.html', upload_key=user.upload_key, files=files)
 
     if request.method == 'POST':
-        user = db.session.query(db.User).filter(db.User.username == session['username']).first()
+        user = get_user(username=session['username'])
         if 'regenerate_upload_key' in request.form:
             user.upload_key = db.User.gen_upload_key()
             db.session.commit()
@@ -159,11 +190,9 @@ def delete_expired():
         files = db.session.query(db.File).filter(db.File.expires <= datetime.utcnow())
         for f in files:
             try:
-                os.remove(os.path.join('uploads/', f.filename))
-                db.session.delete(f)
+                delete_file(f)
             except OSError as e:
                 pass
-        db.session.commit()
         time.sleep(60)
 
 

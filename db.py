@@ -58,8 +58,12 @@ class User(Base):
 
     @staticmethod
     def gen_upload_key():
-        return binascii.hexlify(os.urandom(24)).decode()
-
+        while True:
+            key = binascii.hexlify(os.urandom(24)).decode()
+            if session.query(User).filter(User.upload_key == key).one_or_none():
+                continue
+            else:
+                return key
 
 class File(Base):
     __tablename__ = 'files'

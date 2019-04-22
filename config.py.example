@@ -1,3 +1,4 @@
 secret_key = "key"
 debug = True
 port = 5000
+max_content_length = 1 * 1024 * 1024 #1MB
