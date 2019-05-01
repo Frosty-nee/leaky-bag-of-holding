@@ -86,7 +86,7 @@ def upload_file(user, files, expires=None):
         for f in files:
             file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
             while True:
-                random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(12)]) + file_extension
+                random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(13)]) + file_extension
                 if check_filename_free(random_filename):
                     break
             files[f].save(os.path.join('uploads/', random_filename))
@@ -135,20 +135,14 @@ def get_file(filename):
 
 def get_user(username=None, user_id=None, upload_key=None):
     if username:
-        try:
-            return db.session.query(db.User).filter(db.User.username == username).one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
+        user_query =  db.session.query(db.User).filter(db.User.username == username)
     elif user_id:
-        try:
-            return db.session.query(db.User).filter(db.User.id == user_id).one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
+        user_query = db.session.query(db.User).filter(db.User.id == user_id)
+    elif upload_key:
+        user_query = db.session.query(db.User).filter(db.User.upload_key == upload_key)
     else:
-        try:
-            return db.session.query(db.User).filter(db.User.upload_key == upload_key).one()
-        except sqlalchemy.orm.exc.NoResultFound:
-            return None
+        raise AssertionError("get_user called with no identifier")
+    return user_query.one_or_none()
 
 @app.route('/logout')
 def logout():

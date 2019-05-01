@@ -1,3 +1,31 @@
-input[type="text"] {
+input[type="submit"] {
+	margin-bottom: 10px;
+	float: right;
+}
+
+.file_upload {
+	width: 600px;
+	height: 400px;
+	float: none;
+	margin: auto;
+}
+
+.expire_entry {
+	float: left;
+}
+
+.expire_entry input[type="text"] {
 	width: 70px;
+}
+
+.expiry_and_upload {
+	height: 30px;
+	width: 300px;
+	margin: auto;
+}
+
+input[type="file"] {
+	width: 600px;
+	height: 400px;
+	background: #313f3f;
 }

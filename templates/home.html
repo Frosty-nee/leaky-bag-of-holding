@@ -6,9 +6,16 @@
 {% block main %}
 	<div class=upload_form>
 		<form method='POST' enctype='multipart/form-data'>
-			<input type='text' name='expire_in' value='7d'>
-			<input type='file' name='files' required>
-			<input type='submit' value='upload'>
+			<div class='expiry_and_upload'>
+				<div class='expire_entry'>
+					<label>Expires in</label>
+					<input type='text' name='expire_in' value='7d'>
+				</div>
+				<input type='submit' value='upload'>
+			</div>
+			<div class='file_upload'>
+				<input type='file' name='files' value='upload files here' required>
+			</div>
 		</form>
 	</div>
 {% endblock %}

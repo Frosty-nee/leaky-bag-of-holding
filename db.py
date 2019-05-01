@@ -60,7 +60,7 @@ class User(Base):
     def gen_upload_key():
         while True:
             key = binascii.hexlify(os.urandom(24)).decode()
-            if session.query(User).filter(User.upload_key == key).one_or_none():
+            if session.query(User).filter(User.upload_key == key).count > 0:
                 continue
             else:
                 return key
