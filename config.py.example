@@ -2,5 +2,5 @@ secret_key = "key"
 debug = True
 port = 5000
 max_content_length = 1 * 1024 * 1024 #1MB
-max_usable_disk_space = 5000 * 1024 * 1024 #50GB
+max_usable_disk_space = 5 * 1024 * 1024 * 1024 #5GB
 files_domain = 'domain where the files are stored'

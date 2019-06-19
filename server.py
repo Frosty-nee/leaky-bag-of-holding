@@ -179,19 +179,7 @@ def account():
             return flask.redirect(flask.url_for('account'))
     return flask.render_template('account.html')
 
-def delete_expired():
-    while True:
-        files = db.session.query(db.File).filter(db.File.expires <= datetime.utcnow())
-        for f in files:
-            try:
-                delete_file(f)
-            except OSError as e:
-                pass
-        time.sleep(60)
-
 
 if __name__ == '__main__':
-    delete_thread = threading.Thread(target=delete_expired)
-    delete_thread.start()
     app.run(port=config.port, debug=config.debug)
 
