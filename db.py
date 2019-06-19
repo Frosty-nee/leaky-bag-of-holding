@@ -60,7 +60,7 @@ class User(Base):
     def gen_upload_key():
         while True:
             key = binascii.hexlify(os.urandom(24)).decode()
-            if session.query(User).filter(User.upload_key == key).count > 0:
+            if session.query(User).filter(User.upload_key == key).count() > 0:
                 continue
             else:
                 return key
@@ -80,7 +80,7 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 def drop_db():
-    pass
+    Base.metadata.drop_all(bind=engine)
 
 
 def create_user(username, password):
@@ -105,7 +105,13 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'init':
             init_db()
+            sys.exit()
         if sys.argv[1] == 'drop':
             drop_db()
+            sys.exit()
         if sys.argv[1] == 'create':
             create_user(sys.argv[2], sys.argv[3])
+            sys.exit()
+        if sys.argv[1] == 'delete':
+            delete_user(sys.argv[2])
+            sys.exit()
