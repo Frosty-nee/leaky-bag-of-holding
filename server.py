@@ -1,4 +1,6 @@
 #! python3
+import eventlet
+eventlet.monkey_patch()
 
 import os
 import binascii
@@ -11,6 +13,7 @@ import time
 import flask
 from flask import request, session
 from werkzeug.utils import secure_filename
+import eventlet.wsgi
 
 import db
 import config
@@ -181,5 +184,8 @@ def account():
 
 
 if __name__ == '__main__':
-    app.run(port=config.port, debug=config.debug)
-
+    if config.debug:
+        app.run(port=config.port, debug=config.debug)
+    else:
+        listener = eventlet.listen((config.web_host, config.web_port))
+        eventlet.wsgi.server(listener, app)
