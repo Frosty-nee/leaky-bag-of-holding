@@ -82,10 +82,12 @@ def parse_time(expiry_string):
 def get_current_disk_usage():
     return sum(os.path.getsize(os.path.join('uploads', f)) for f in os.listdir('uploads'))
 
-def make_space_on_disk(incoming_filesize):
+def make_space_on_disk(space_needed):
+    space_cleared = 0
     for f in db.session.query(db.File).order_by(db.File.expires).all():
-        if incoming_filesize + get_current_disk_usage() < config.max_usable_disk_space:
+        if space_cleared > space_needed:
             break
+        space_cleared += os.path.getsize(os.path.join('uploads', f.filename))
         delete_file(f)
 
 def upload_file(user, files, expires=None):
@@ -96,7 +98,7 @@ def upload_file(user, files, expires=None):
         uploaded_size += files[f].tell()
         files[f].seek(0)
     if uploaded_size + current_disk_usage >= config.max_usable_disk_space:
-        make_space_on_disk(uploaded_size)
+        make_space_on_disk(uploaded_size + current_disk_usage - config.max_usable_disk_space)
     if expires == None:
         expires = '7d'
     expires = parse_time(expires) + datetime.utcnow()
