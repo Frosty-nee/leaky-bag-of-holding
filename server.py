@@ -79,7 +79,24 @@ def parse_time(expiry_string):
         return flask.abort(400)
     return td
 
+def get_current_disk_usage():
+    return sum(os.path.getsize(os.path.join('uploads', f)) for f in os.listdir('uploads'))
+
+def make_space_on_disk(incoming_filesize):
+    for f in db.session.query(db.File).order_by(db.File.expires).all():
+        if incoming_filesize + get_current_disk_usage() < config.max_usable_disk_space:
+            break
+        delete_file(f)
+
 def upload_file(user, files, expires=None):
+    uploaded_size = 0
+    current_disk_usage = get_current_disk_usage()
+    for f in files:
+        files[f].seek(0,os.SEEK_END)
+        uploaded_size += files[f].tell()
+        files[f].seek(0)
+    if uploaded_size + current_disk_usage >= config.max_usable_disk_space:
+        make_space_on_disk(uploaded_size)
     if expires == None:
         expires = '7d'
     expires = parse_time(expires) + datetime.utcnow()

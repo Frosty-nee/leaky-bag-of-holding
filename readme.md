@@ -16,7 +16,7 @@ $ psql
 
 Create the db schema by running:
 ```
-./db.py init"
+./db.py init
 ```
 ## User Management:
 
