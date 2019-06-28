@@ -36,7 +36,7 @@
 			{% for file in files %}
 			<div class="file_entry_wrapper">
 				<div class="filename">
-					<a href="https://file.frosty-nee.net/{{file.filename}}">{{file.filename}}</a>
+					<a href="https://{{host}}/{{file.filename}}">{{file.filename}}</a>
 				</div>
 				<div class="expiry">
 					Expires at: {{file.expires}}

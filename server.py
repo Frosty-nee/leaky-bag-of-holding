@@ -180,7 +180,7 @@ def account():
     if request.method == 'GET':
         user = get_user(username=session['username'])
         files = db.session.query(db.File).filter(db.File.who_uploaded == user.id)
-        return flask.render_template('account.html', upload_key=user.upload_key, files=files)
+        return flask.render_template('account.html', upload_key=user.upload_key, files=files, host=config.files_domain)
 
     if request.method == 'POST':
         user = get_user(username=session['username'])
