@@ -96,6 +96,14 @@ def create_user(username, password):
 
 def delete_user(username):
     user = session.query(User).filter(User.username == username).first()
+    files = session.query(File).filter(File.who_uploaded == user.id).all()
+    for f in files:
+        try:
+            session.delete(f)
+            session.commit()
+            os.remove(os.path.join('uploads', f.filename))
+        except OSError:
+            pass
     session.delete(user)
     session.commit()
 
