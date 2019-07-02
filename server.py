@@ -112,7 +112,8 @@ def upload_file(user, files, expires=None):
                 if check_filename_free(random_filename):
                     break
             files[f].save(os.path.join('uploads/', random_filename))
-            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires))
+            filesize = os.path.getsize(os.path.join('uploads/', random_filename))
+            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires, filesize=filesize))
             db.session.commit()
             return 'https://{}/'.format(config.files_domain) + random_filename
 
