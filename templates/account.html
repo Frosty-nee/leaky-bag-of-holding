@@ -38,6 +38,9 @@
 				<div class="filename">
 					<a href="https://{{host}}/{{file.filename}}">{{file.filename}}</a>
 				</div>
+				<div class="filesize">
+					Size: {{(file.filesize / 1024) |round |int}} KB
+				</div>
 				<div class="expiry">
 					Expires at: {{file.expires}}
 				</div>

@@ -5,15 +5,32 @@
 .filename {
     float: left;
     width: 180px;
+	margin-left: 10px;
 }
 
 .expiry {
     float: left;
+	margin-left: 30px;
+}
+
+.file_entry_wrapper {
+	width: 700px;
+	height: 20px;
+}
+
+.files {
+	width: 800px;
+	margin-top: 100px;
 }
 
 .delete {
     float: left;
     padding-left: 30px;
+}
+
+.filesize {
+	float: left;
+	width: 100px;
 }
 
 .password_update {
