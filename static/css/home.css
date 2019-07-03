@@ -10,17 +10,10 @@ input[type="submit"] {
 	margin: auto;
 }
 
-.expire_entry {
-	float: left;
-}
-
-.expire_entry input[type="text"] {
-	width: 70px;
-}
-
-.expiry_and_upload {
+.upload {
+	float: none;
+	width: 56px;
 	height: 30px;
-	width: 300px;
 	margin: auto;
 }
 

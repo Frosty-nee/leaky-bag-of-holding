@@ -29,7 +29,7 @@ def home():
             user = None
         else:
             user = get_user(username=session['username'])
-        return flask.redirect(upload_file(user, request.files, request.form.get('expire_in')))
+        return flask.redirect(upload_file(user, request.files))
     else:
         return flask.render_template('home.html')
 
@@ -55,42 +55,21 @@ expires is a string in the format 1d2h3m
 @app.route('/upload', methods=['POST'])
 def upload():
     user = get_user(upload_key=request.args.get('upload_key'))
-    expires = request.args.get('expires')
-    return upload_file(user, request.files, expires)
+    return upload_file(user, request.files)
 
-'''
-takes a duration string and converts it to timedelta
-string format is 1d2h3m
-'''
-def parse_time(expiry_string):
-    td_args = {'days': 0, 'hours': 0, 'minutes': 0}
-    for char, unit in zip('dhm', ['days', 'hours', 'minutes']):
-        try:
-            n_units, arg = expiry_string.split(char,1)
-        except ValueError:
-            continue
-        try:
-            td_args[unit] = int(n_units)
-        except ValueError as e:
-            continue
-    try:
-        td = timedelta(**td_args)
-    except OverflowError:
-        return flask.abort(400)
-    return td
 
 def get_current_disk_usage():
     return sum(os.path.getsize(os.path.join('uploads', f)) for f in os.listdir('uploads'))
 
 def make_space_on_disk(space_needed):
     space_cleared = 0
-    for f in db.session.query(db.File).order_by(db.File.expires).all():
+    for f in db.session.query(db.File).order_by(db.File.uploaded).all():
         if space_cleared > space_needed:
             break
         space_cleared += os.path.getsize(os.path.join('uploads', f.filename))
         delete_file(f)
 
-def upload_file(user, files, expires=None):
+def upload_file(user, files):
     uploaded_size = 0
     current_disk_usage = get_current_disk_usage()
     for f in files:
@@ -99,9 +78,6 @@ def upload_file(user, files, expires=None):
         files[f].seek(0)
     if uploaded_size + current_disk_usage >= config.max_usable_disk_space:
         make_space_on_disk(uploaded_size + current_disk_usage - config.max_usable_disk_space)
-    if expires == None:
-        expires = '7d'
-    expires = parse_time(expires) + datetime.utcnow()
     if user == None:
         return flask.abort(401)
     else:
@@ -113,7 +89,7 @@ def upload_file(user, files, expires=None):
                     break
             files[f].save(os.path.join('uploads/', random_filename))
             filesize = os.path.getsize(os.path.join('uploads/', random_filename))
-            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, expires=expires, filesize=filesize))
+            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, uploaded=datetime.utcnow(), filesize=filesize))
             db.session.commit()
             return 'https://{}/'.format(config.files_domain) + random_filename
 

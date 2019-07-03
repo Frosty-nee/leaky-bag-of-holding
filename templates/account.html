@@ -41,8 +41,8 @@
 				<div class="filesize">
 					Size: {{(file.filesize / 1024) |round |int}} KB
 				</div>
-				<div class="expiry">
-					Expires at: {{file.expires}}
+				<div class="uploaded">
+					Uploaded at: {{file.uploaded}}
 				</div>
 				<div class="delete">
 					<a href="/delete/{{file.filename}}">Delete</a>

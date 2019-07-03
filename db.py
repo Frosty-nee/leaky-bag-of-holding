@@ -71,11 +71,11 @@ class File(Base):
     id = Column(Integer, primary_key=True)
     who_uploaded = Column(Integer, ForeignKey("users.id"), nullable=False)
     filename = Column(String, unique=True)
-    expires = Column(DateTime)
+    uploaded = Column(DateTime)
     filesize = Column(Integer)
 
     def __repr__(self):
-        return"<File(filename='%s', who_uploaded='%s', expires='%s', filesize='%s')>" % (self.filename, self.who_uploaded, self.expires, self.filesize)
+        return"<File(filename='%s', who_uploaded='%s', uploaded='%s', filesize='%s')>" % (self.filename, self.who_uploaded, self.uploaded, self.filesize)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
