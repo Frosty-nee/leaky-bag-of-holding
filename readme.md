@@ -1,5 +1,5 @@
 ## leaky-bag-of-holding
-an ephemeral file sharing solution with automatic file deletion after a specified delay
+An ephemeral file sharing solution with automatic file deletion. Files are deleted on a first in first out basis.
 
 
 ## Database Setup:
@@ -18,6 +18,15 @@ Create the db schema by running:
 ```
 ./db.py init
 ```
+
+## Config Setup:
+`mv config.py.example config.py`
+
+`max_content_length` and `max_usable_disk_space` are a number of bytes (defaults are 1MB and 5GB)
+
+`files_domain` is the domain that you're using to actually serve the files that are uploaded
+
+
 ## User Management:
 
 ```
@@ -26,7 +35,7 @@ Create the db schema by running:
 ```
 
 
-## Webserver setup:
+## Nginx setup:
 You'll need to set up two configs, one which is hosting the files and one which is serving the actual website.
 #### webserver sample config:
 ````
