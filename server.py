@@ -1,19 +1,17 @@
 #! python3
 import eventlet
 eventlet.monkey_patch()
+import eventlet.wsgi
 
 import os
 import binascii
 import string
 import random
-from datetime import datetime, timedelta
-import threading
-import time
+from datetime import datetime
 
 import flask
 from flask import request, session
 from werkzeug.utils import secure_filename
-import eventlet.wsgi
 
 import db
 import config
@@ -80,18 +78,18 @@ def upload_file(user, files):
         make_space_on_disk(uploaded_size + current_disk_usage - config.max_usable_disk_space)
     if user == None:
         return flask.abort(401)
-    else:
-        for f in files:
-            file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
-            while True:
-                random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(13)]) + file_extension
-                if check_filename_free(random_filename):
-                    break
-            files[f].save(os.path.join('uploads/', random_filename))
-            filesize = os.path.getsize(os.path.join('uploads/', random_filename))
-            db.session.add(db.File(who_uploaded=user.id, filename=random_filename, uploaded=datetime.utcnow(), filesize=filesize))
-            db.session.commit()
-            return 'https://{}/'.format(config.files_domain) + random_filename
+
+    for f in files:
+        file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
+        while True:
+            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(13)]) + file_extension
+            if check_filename_free(random_filename):
+                break
+        files[f].save(os.path.join('uploads/', random_filename))
+        filesize = os.path.getsize(os.path.join('uploads/', random_filename))
+        db.session.add(db.File(who_uploaded=user.id, filename=random_filename, uploaded=datetime.utcnow(), filesize=filesize))
+        db.session.commit()
+        return 'https://{}/'.format(config.files_domain) + random_filename
 
 def check_filename_free(filename):
     if not get_file(filename):
@@ -183,5 +181,5 @@ if __name__ == '__main__':
     if config.debug:
         app.run(port=config.port, debug=config.debug)
     else:
-        listener = eventlet.listen((config.web_host, config.web_port))
+        listener = eventlet.listen((config.web_host, config.port))
         eventlet.wsgi.server(listener, app)
