@@ -45,13 +45,12 @@ def login():
         return flask.redirect(flask.url_for('login'))
 
 
-'''
-route for sharex use, takes url parameters 'upload_key' and 'expires'
-upload key is copy/pasted from account page
-expires is a string in the format 1d2h3m
-'''
 @app.route('/upload', methods=['POST'])
 def upload():
+    '''
+    route for sharex use, takes url parameters 'upload_key'
+    upload key is copy/pasted from account page
+    '''
     user = get_user(upload_key=request.args.get('upload_key'))
     return upload_file(user, request.files)
 
@@ -71,12 +70,12 @@ def upload_file(user, files):
     uploaded_size = 0
     current_disk_usage = get_current_disk_usage()
     for f in files:
-        files[f].seek(0,os.SEEK_END)
+        files[f].seek(0, os.SEEK_END)
         uploaded_size += files[f].tell()
         files[f].seek(0)
     if uploaded_size + current_disk_usage >= config.max_usable_disk_space:
         make_space_on_disk(uploaded_size + current_disk_usage - config.max_usable_disk_space)
-    if user == None:
+    if user is None:
         return flask.abort(401)
 
     for f in files:
@@ -92,30 +91,26 @@ def upload_file(user, files):
         return 'https://{}/'.format(config.files_domain) + random_filename
 
 def check_filename_free(filename):
-    if not get_file(filename):
-        return True
-    else:
-        return False
+    return bool(get_file(filename))
 
 @app.route('/delete/<filename>')
 def delete(filename):
     if not request.args.get('upload_key') and 'username' not in session:
         return flask.abort(401)
+    if 'user_id' in session:
+        user_id = session['user_id']
+    elif request.args.get('upload_key'):
+        user_id = get_user(upload_key=request.args.get('upload_key')).id
     else:
-        if 'user_id' in session:
-            user_id = session['user_id']
-        elif request.args.get('upload_key'):
-            user_id = get_user(upload_key=request.args.get('upload_key')).id
-        else:
-            return flask.abort(401)
-        f = get_file(filename)
-        if not f:
+        return flask.abort(401)
+    f = get_file(filename)
+    if not f:
+        return flask.abort(500)
+    if f.who_uploaded == user_id:
+        try:
+            delete_file(f)
+        except OSError:
             return flask.abort(500)
-        if f.who_uploaded == user_id:
-            try:
-                delete_file(f)
-            except OSError:
-                return flask.abort(500)
     return flask.redirect(flask.url_for('account'))
 
 def delete_file(f):
@@ -124,7 +119,7 @@ def delete_file(f):
         db.session.commit()
         os.remove(os.path.join('uploads/', f.filename))
     except OSError:
-        raise
+        pass
 
 
 def get_file(filename):
@@ -132,7 +127,7 @@ def get_file(filename):
 
 def get_user(username=None, user_id=None, upload_key=None):
     if username:
-        user_query =  db.session.query(db.User).filter(db.User.username == username)
+        user_query = db.session.query(db.User).filter(db.User.username == username)
     elif user_id:
         user_query = db.session.query(db.User).filter(db.User.id == user_id)
     elif upload_key:
@@ -173,7 +168,6 @@ def account():
                 return flask.redirect(flask.url_for('account'))
             user.password = db.User.hash_pw(request.form['new_password'], binascii.unhexlify(user.salt))[0]
             db.session.commit()
-            return flask.redirect(flask.url_for('account'))
     return flask.render_template('account.html')
 
 
