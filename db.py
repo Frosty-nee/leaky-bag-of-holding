@@ -108,6 +108,14 @@ def delete_user(username):
     session.delete(user)
     session.commit()
 
+def password_reset(username, password):
+    user=session.query(User).filter(User.username == username).first()
+    hashed_pass, salt = User.hash_pw(password)
+    upload_key = User.gen_upload_key()
+    user.password = hashed_pass
+    user.salt = salt
+    user.upload_key = upload_key
+    session.commit()
 
 if __name__ == '__main__':
     import sys
@@ -123,4 +131,7 @@ if __name__ == '__main__':
             sys.exit()
         if sys.argv[1] == 'delete':
             delete_user(sys.argv[2])
+            sys.exit()
+        if sys.argv[1] == 'reset':
+            password_reset(sys.argv[2], sys.argv[3])
             sys.exit()
