@@ -77,7 +77,6 @@ def upload_file(user, files):
         make_space_on_disk(uploaded_size + current_disk_usage - config.max_usable_disk_space)
     if user is None:
         return flask.abort(401)
-
     for f in files:
         file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
         while True:
@@ -91,7 +90,7 @@ def upload_file(user, files):
         return 'https://{}/'.format(config.files_domain) + random_filename
 
 def check_filename_free(filename):
-    return bool(get_file(filename))
+    return not bool(get_file(filename))
 
 @app.route('/delete/<filename>')
 def delete(filename):
