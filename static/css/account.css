@@ -1,7 +1,3 @@
-.file_entry_wrapper {
-    width: 600px;
-}
-
 .filename {
     float: left;
     width: 180px;
@@ -11,10 +7,11 @@
 .uploaded {
     float: left;
 	margin-left: 30px;
+	width: 290px;
 }
 
 .file_entry_wrapper {
-	width: 700px;
+	width: auto;
 	height: 20px;
 }
 
