@@ -27,7 +27,13 @@ def home():
             user = None
         else:
             user = get_user(username=session['username'])
-        return flask.redirect(upload_file(user, request.files))
+            if 'keep_filename' in request.form:
+                keep_filename=True
+            else:
+                keep_filename=False
+            if not keep_filename: keep_filename=False
+            print(keep_filename)
+        return flask.redirect(upload_file(user, request.files, keep_filename))
     else:
         return flask.render_template('home.html')
 
@@ -52,7 +58,11 @@ def upload():
     upload key is copy/pasted from account page
     '''
     user = get_user(upload_key=request.args.get('upload_key'))
-    return upload_file(user, request.files)
+    print(request.args.get('keep_filename'))
+    if request.args.get('keep_filename') == "True":
+        keep_filename=True
+    else: keep_filename=False
+    return upload_file(user, request.files, keep_filename)
 
 
 def get_current_disk_usage():
@@ -66,7 +76,7 @@ def make_space_on_disk(space_needed):
         space_cleared += os.path.getsize(os.path.join('uploads', f.filename))
         delete_file(f)
 
-def upload_file(user, files):
+def upload_file(user, files, keep_filename):
     uploaded_size = 0
     current_disk_usage = get_current_disk_usage()
     for f in files:
@@ -79,15 +89,23 @@ def upload_file(user, files):
         return flask.abort(401)
     for f in files:
         file_extension = os.path.splitext(secure_filename(files[f].filename))[1]
-        while True:
-            random_filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(13)]) + file_extension
-            if check_filename_free(random_filename):
-                break
-        files[f].save(os.path.join('uploads/', random_filename))
-        filesize = os.path.getsize(os.path.join('uploads/', random_filename))
-        db.session.add(db.File(who_uploaded=user.id, filename=random_filename, uploaded=datetime.utcnow(), filesize=filesize))
+        if not keep_filename:
+            while True:
+                filename = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in range(13)]) + file_extension
+                if check_filename_free(filename):
+                    break
+        else:
+            filename=files[f].filename
+            if check_filename_free(filename):
+                pass
+            else:
+                filename=fix_filename_collision(filename)
+
+        files[f].save(os.path.join('uploads/', filename))
+        filesize = os.path.getsize(os.path.join('uploads/', filename))
+        db.session.add(db.File(who_uploaded=user.id, filename=filename, uploaded=datetime.utcnow(), filesize=filesize))
         db.session.commit()
-        return 'https://{}/'.format(config.files_domain) + random_filename
+        return 'https://{}/'.format(config.files_domain) + filename
 
 def check_filename_free(filename):
     return not bool(get_file(filename))
