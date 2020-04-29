@@ -99,13 +99,23 @@ def upload_file(user, files, keep_filename):
             if check_filename_free(filename):
                 pass
             else:
-                filename=fix_filename_collision(filename)
+                filename=handle_filename_collision(filename)
 
         files[f].save(os.path.join('uploads/', filename))
         filesize = os.path.getsize(os.path.join('uploads/', filename))
         db.session.add(db.File(who_uploaded=user.id, filename=filename, uploaded=datetime.utcnow(), filesize=filesize))
         db.session.commit()
         return 'https://{}/'.format(config.files_domain) + filename
+
+def handle_filename_collision(filename):
+    filename, ext = os.path.splitext(filename)
+    count=1
+    while True:
+        name = '{}_{}{}'.format(filename, count, ext)
+        if check_filename_free(name):
+            return name
+        else:
+            count+=1
 
 def check_filename_free(filename):
     return not bool(get_file(filename))
