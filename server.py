@@ -8,7 +8,7 @@ import binascii
 import string
 import random
 from datetime import datetime
-
+import urllib.parse
 import flask
 from flask import request, session
 from werkzeug.utils import secure_filename
@@ -58,7 +58,6 @@ def upload():
     upload key is copy/pasted from account page
     '''
     user = get_user(upload_key=request.args.get('upload_key'))
-    print(request.args.get('keep_filename'))
     if request.args.get('keep_filename') == "True":
         keep_filename=True
     else: keep_filename=False
@@ -105,7 +104,7 @@ def upload_file(user, files, keep_filename):
         filesize = os.path.getsize(os.path.join('uploads/', filename))
         db.session.add(db.File(who_uploaded=user.id, filename=filename, uploaded=datetime.utcnow(), filesize=filesize))
         db.session.commit()
-        return 'https://{}/'.format(config.files_domain) + filename
+        return 'https://{}/'.format(config.files_domain) + urllib.parse.quote(filename)
 
 def handle_filename_collision(filename):
     filename, ext = os.path.splitext(filename)
